@@ -3,7 +3,8 @@ package vn.edu.ptit.oop.nhom09.ui.dialogs;
 import vn.edu.ptit.oop.nhom09.service.FineCalculator;
 import vn.edu.ptit.oop.nhom09.service.BookFine;
 import vn.edu.ptit.oop.nhom09.service.MagazineFine;
-
+import vn.edu.ptit.oop.nhom09.service.LoanService;
+import vn.edu.ptit.oop.nhom09.model.LibraryItem;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -19,6 +20,8 @@ public class LoanDialog extends JDialog {
     private JTextField txtPhone;
     private JTextField txtDocument;
     private JTextField txtDueDate;
+    private LoanService loanService;
+    private LibraryItem CurrenItem;
 
     private JComboBox<String> cboDocumentType;
 
@@ -39,12 +42,50 @@ public class LoanDialog extends JDialog {
             new DecimalFormat("#,###");
 
     // Constructor
-    public LoanDialog(Frame owner) {
+    public LoanDialog(Frame owner, LoanService loanService, LibraryItem item) {
 
         super(owner, "Quản lý mượn / trả tài liệu", true);
 
-        initComponents();
+        this.loanService = loanService;
+        this.CurrenItem = item;
 
+        initComponents();
+      
+        if (item != null) {
+        
+       
+        cboDocumentType.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{item.getTypeName()}));
+        cboDocumentType.setEnabled(false);
+
+        txtDocument.setText(item.getTitle());
+        txtDocument.setEditable(false);
+    if (!item.isAvailable()) {
+    borrowed = true;
+    lblStatus.setText("Đang mượn (Đã lưu vào hệ thống)");
+    lblStatus.setForeground(Color.BLUE);
+    btnBorrow.setEnabled(false);
+    btnReturn.setEnabled(true);
+
+    for (vn.edu.ptit.oop.nhom09.model.LoanRecord record : loanService.getAllLoans()) {
+        if (record.getItemId().equals(item.getId()) && !record.isReturned()) {
+            
+            this.borrowDate = record.getLoanDate();
+            this.dueDate = record.getDueDate();
+            
+            // Hiển thị lại lên giao diện
+            txtDueDate.setText(this.dueDate.toString());
+            txtBorrower.setText(record.getBorrowerName());
+            txtPhone.setText(record.getBorrowerId());
+            
+            // Khóa các ô không cho sửa
+            txtBorrower.setEditable(false);
+            txtPhone.setEditable(false);
+            txtDueDate.setEditable(false);
+            break; // Tìm thấy thì dừng vòng lặp
+        }
+    }
+}
+        }
         setSize(550, 450);
         setLocationRelativeTo(owner);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -158,7 +199,7 @@ public class LoanDialog extends JDialog {
 
         btnClose.addActionListener(e -> dispose());
     }
-
+   
     // Chức năng mượn tài liệu
     private void borrowDocument() {
 
@@ -216,6 +257,14 @@ public class LoanDialog extends JDialog {
             }
 
             borrowed = true;
+            try {
+            
+            loanService.borrowItem(CurrenItem, phone, borrower, borrowDate);
+            CurrenItem.setAvailable(false); 
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi hệ thống: " + ex.getMessage());
+            return;
+        }
 
             lblStatus.setText("Đang mượn");
             lblStatus.setForeground(Color.BLUE);
@@ -307,6 +356,13 @@ public class LoanDialog extends JDialog {
         lblStatus.setForeground(new Color(0, 150, 0));
 
         borrowed = false;
+        try {
+            loanService.returnItem(CurrenItem.getId(), returnDate);
+            CurrenItem.setAvailable(true); 
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi hệ thống: " + ex.getMessage());
+            return;
+        }
 
         btnReturn.setEnabled(false);
 
@@ -325,4 +381,3 @@ public class LoanDialog extends JDialog {
         );
     }
 }
-

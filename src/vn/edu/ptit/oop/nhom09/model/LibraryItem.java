@@ -45,4 +45,16 @@ public abstract class LibraryItem {
     public abstract String getTypeName();
 
     public abstract int getLoanDays();
+
+    private boolean available = true;
+
+    // Getter trả về giá trị thực sự của biến
+    public boolean isAvailable() {
+        return this.available;
+    }
+
+    // Setter để thay đổi trạng thái
+    public void setAvailable(boolean available) {
+        this.available = available;
+}
 }
