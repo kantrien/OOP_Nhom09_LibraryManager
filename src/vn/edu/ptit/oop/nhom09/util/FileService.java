@@ -1,11 +1,10 @@
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-
 package vn.edu.ptit.oop.nhom09.util;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,7 +31,6 @@ public final class FileService {
                 path, StandardCharsets.UTF_8)) {
 
             String line;
-
             while ((line = reader.readLine()) != null) {
                 rows.add(parseCSVLine(line));
             }
@@ -112,33 +110,32 @@ public final class FileService {
 
         return result.toString();
     }
-}
 
-public static void saveObject(
-        String filePath, Object object) throws IOException {
+    public static void saveObject(
+            String filePath, Object object) throws IOException {
 
-    Path path = Paths.get(filePath);
-    Path parent = path.toAbsolutePath().getParent();
+        Path path = Paths.get(filePath);
+        Path parent = path.toAbsolutePath().getParent();
 
-    if (parent != null) {
-        Files.createDirectories(parent);
+        if (parent != null) {
+            Files.createDirectories(parent);
+        }
+
+        try (ObjectOutputStream out = new ObjectOutputStream(
+                Files.newOutputStream(path))) {
+            out.writeObject(object);
+        }
     }
 
-    try (ObjectOutputStream out = new ObjectOutputStream(
-            Files.newOutputStream(path))) {
-        out.writeObject(object);
+
+    public static Object loadObject(String filePath)
+            throws IOException, ClassNotFoundException {
+
+        Path path = Paths.get(filePath);
+
+        try (ObjectInputStream in = new ObjectInputStream(
+                Files.newInputStream(path))) {
+            return in.readObject();
+        }
     }
 }
-
-public static Object loadObject(
-        String filePath)
-        throws IOException, ClassNotFoundException {
-
-    Path path = Paths.get(filePath);
-
-    try (ObjectInputStream in = new ObjectInputStream(
-            Files.newInputStream(path))) {
-        return in.readObject();
-    }
-}
-
