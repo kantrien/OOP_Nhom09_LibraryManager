@@ -1,3 +1,5 @@
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 package vn.edu.ptit.oop.nhom09.util;
 
@@ -111,3 +113,32 @@ public final class FileService {
         return result.toString();
     }
 }
+
+public static void saveObject(
+        String filePath, Object object) throws IOException {
+
+    Path path = Paths.get(filePath);
+    Path parent = path.toAbsolutePath().getParent();
+
+    if (parent != null) {
+        Files.createDirectories(parent);
+    }
+
+    try (ObjectOutputStream out = new ObjectOutputStream(
+            Files.newOutputStream(path))) {
+        out.writeObject(object);
+    }
+}
+
+public static Object loadObject(
+        String filePath)
+        throws IOException, ClassNotFoundException {
+
+    Path path = Paths.get(filePath);
+
+    try (ObjectInputStream in = new ObjectInputStream(
+            Files.newInputStream(path))) {
+        return in.readObject();
+    }
+}
+
