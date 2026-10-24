@@ -3,14 +3,12 @@ package vn.edu.ptit.oop.nhom09.ui.dialogs.form;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import java.awt.CardLayout;
+import java.util.Currency;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Quản lý CardLayout: mỗi loại tài liệu là một card (một TypeFieldPanel).
- * Thêm loại mới = viết thêm 1 TypeFieldPanel và đưa vào danh sách, không sửa lớp này (Open-Closed).
- */
+
 public final class FormUIHelper {
 
     private final CardLayout cards = new CardLayout();
@@ -19,24 +17,35 @@ public final class FormUIHelper {
     private String currentType;
 
     public FormUIHelper(List<TypeFieldPanel> typePanels) {
-        // TODO: với mỗi panel → panels.put(p.typeName(), p) và container.add(p, p.typeName())
-        // TODO: currentType = loại đầu tiên
-        // Câu hỏi: nếu 2 panel trùng typeName() thì sao? Nên xử lý thế nào?
+        if (typePanels == null || typePanels.isEmpty()) {
+            throw new IllegalArgumentException("Cần ít nhất một loại tài liệu");
+        }
+        for (TypeFieldPanel p : typePanels) {
+            String key = p.typeName();
+            if (panels.containsKey(key)) {
+                throw new IllegalArgumentException("Trùng loại tài liệu: " + key);
+            }
+            panels.put(key, p);
+            container.add(p, key);
+        }
+        currentType = typePanels.get(0).typeName();
     }
 
-    /** Tạo ComboBox chứa tên các loại; đổi lựa chọn → đổi card. */
     public JComboBox<String> createTypeCombo() {
-        // TODO: new JComboBox<>(panels.keySet().toArray(new String[0]))
-        // TODO: addActionListener → show((String) combo.getSelectedItem())
-        throw new UnsupportedOperationException("TODO");
+        JComboBox<String> combo = new JComboBox<>(panels.keySet().toArray(new String[0]));
+        combo.setSelectedItem(currentType);
+        combo.addActionListener(e -> show((String) combo.getSelectedItem()));
+        return combo;
     }
 
-    /** Hiển thị card ứng với loại tài liệu. */
     public void show(String typeName) {
-        // TODO: kiểm tra typeName có trong map không (fail-secure), rồi cards.show(...)
+        if (!panels.containsKey(typeName)) {
+            throw new IllegalArgumentException("Loại tài liệu không hỗ trợ: " + typeName);
+        }
+        cards.show(container, typeName);
+        currentType = typeName;
     }
 
-    /** Panel của loại đang chọn. */
     public TypeFieldPanel current() {
         return panels.get(currentType);
     }
