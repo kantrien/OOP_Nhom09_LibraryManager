@@ -52,18 +52,31 @@ public class LoanService {
         return !loan.isReturned() && date.isAfter(loan.getDueDate());
     }
 
-    public LoanRecord returnItem(String itemId, LocalDate returnedDate) {
-        Objects.requireNonNull(returnedDate, "Ngày trả không được để trống");
-        LoanRecord activeLoan = findActiveLoan(itemId);
-        if (activeLoan == null) {
-            throw new IllegalStateException("Tài liệu hiện không có lượt mượn đang hoạt động");
-        }
 
-        LoanRecord returnedLoan = activeLoan.markReturned(returnedDate);
-        int index = loans.indexOf(activeLoan);
-        loans.set(index, returnedLoan);
-        return returnedLoan;
+public void returnItem(String itemId) throws vn.edu.ptit.oop.nhom09.exception.OverdueException {
+    for (LoanRecord record : loans) {
+        if (record.getItemId().equals(itemId) && !record.isReturned()) {
+        LoanRecord updatedRecord = record.markReturned(java.time.LocalDate.now());
+
+        int index = loans.indexOf(record);
+        if (index != -1) {
+            loans.set(index, updatedRecord);
+}
+            // Lấy ngày trả thực tế (hôm nay) so sánh với ngày phải trả (dueDate)
+            java.time.LocalDate today = java.time.LocalDate.now();
+            if (today.isAfter(record.getDueDate())) {
+             
+                long daysLate = java.time.temporal.ChronoUnit.DAYS.between(record.getDueDate(), today);
+                long fineAmount = daysLate * 5000; 
+                
+                throw new vn.edu.ptit.oop.nhom09.exception.OverdueException(
+                    "Tài liệu đã trễ hạn " + daysLate + " ngày.\nSố tiền phạt: " + fineAmount + " VNĐ"
+                );
+            }
+            break;
+        }
     }
+}
 
     public List<LoanRecord> getAllLoans() {
         return List.copyOf(loans);

@@ -1,5 +1,6 @@
 package vn.edu.ptit.oop.nhom09.repository;
 
+import vn.edu.ptit.oop.nhom09.exception.ItemNotFoundException;
 import vn.edu.ptit.oop.nhom09.model.LibraryItem;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,9 +39,16 @@ public class InMemoryLibraryRepository implements LibraryRepository {
     }
 
     @Override
-    public LibraryItem findById(String id) {
-        return itemsMap.get(id);
+    public LibraryItem findById(String id) throws ItemNotFoundException {
+        for (LibraryItem item : itemsMap.values()) {
+            if (item.getId().equalsIgnoreCase(id)) {
+                return item; 
+            }
+        }
+        
+        throw new ItemNotFoundException("Không tìm thấy tài liệu nào có mã: " + id);
     }
+    
 
     @Override
     public List<LibraryItem> findAll() {
