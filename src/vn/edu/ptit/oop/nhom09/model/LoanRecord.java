@@ -79,4 +79,5 @@ public class LoanRecord {
         }
         return new LoanRecord(itemId, borrowerId, borrowerName, loanDate, dueDate, date);
     }
+
 }

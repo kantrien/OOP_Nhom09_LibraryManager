@@ -11,6 +11,7 @@ import javax.swing.table.TableRowSorter;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -26,6 +27,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import vn.edu.ptit.oop.nhom09.ItemTableModel;
 import vn.edu.ptit.oop.nhom09.LoanTableCellRenderer;
 import vn.edu.ptit.oop.nhom09.common.BaseWindow;
+import vn.edu.ptit.oop.nhom09.exception.ItemNotFoundException;
 import vn.edu.ptit.oop.nhom09.model.LibraryItem;
 import vn.edu.ptit.oop.nhom09.repository.InMemoryLibraryRepository;
 import vn.edu.ptit.oop.nhom09.repository.LibraryRepository;
@@ -51,8 +53,12 @@ public class MainWindow extends BaseWindow {
    @Override
 protected void initUI() {
 
-    // 1. Khởi tạo các nút Toolbar
-    
+        JButton btnAbout = new JButton("Thông tin Nhóm");
+    btnAbout.addActionListener(e -> {
+        vn.edu.ptit.oop.nhom09.ui.AboutDialog aboutDialog = new vn.edu.ptit.oop.nhom09.ui.AboutDialog(this);
+        aboutDialog.setVisible(true);
+    });
+toolBar.add(btnAbout);
     addToolButton("/resources/icons/add.png", "Thêm tài liệu", e -> openAddDialog());
     addToolButton("/resources/icons/loan.png", "Mượn/Trả", e -> openLoanDialog());
     addToolButton("/resources/icons/delete.png", "Xóa tài liệu", e -> handleDeleteItem());
@@ -74,7 +80,7 @@ protected void initUI() {
     JTextField txtSearch = new JTextField();
     searchPanel.add(txtSearch, BorderLayout.CENTER);
     leftPanel.add(searchPanel, BorderLayout.NORTH);
-
+    
     try {
     // 1. Khởi tạo các biến toàn cục 
     repository = new InMemoryLibraryRepository();
@@ -204,6 +210,40 @@ txtSearch.getDocument().addDocumentListener(new javax.swing.event.DocumentListen
             }
         }
     });
+
+    // Gắn sự kiện khi nhấn phím Enter (trên bàn phím) tại ô tìm kiếm
+txtSearch.addActionListener(e -> {
+    String keyword = txtSearch.getText().trim().toLowerCase();
+    
+    if (keyword.isEmpty()) {
+       
+        JOptionPane.showMessageDialog(this, "Vui lòng nhập tên hoặc tác giả cần tìm!");
+        return;
+    }
+
+    try {
+        // Tạo một danh sách rỗng để chứa kết quả tìm được
+        java.util.List<vn.edu.ptit.oop.nhom09.model.LibraryItem> results = new java.util.ArrayList<>();
+        
+        // Quét toàn bộ kho để tìm sách có TÊN hoặc TÁC GIẢ chứa từ khóa
+        for (vn.edu.ptit.oop.nhom09.model.LibraryItem item : repository.findAll()) {
+            if (item.getTitle().toLowerCase().contains(keyword) || 
+                item.getAuthor().toLowerCase().contains(keyword)) {
+                results.add(item);
+            }
+        }
+        if (results.isEmpty()) {
+            throw new vn.edu.ptit.oop.nhom09.exception.ItemNotFoundException(
+                "Không tìm thấy tài liệu nào có tên hoặc tác giả chứa: " + keyword
+            );
+        }
+        tableModel.setItems(results); 
+        
+    } catch (vn.edu.ptit.oop.nhom09.exception.ItemNotFoundException ex) {
+        // Bắt lỗi và hiện hộp thoại thông báo
+        JOptionPane.showMessageDialog(this, ex.getMessage(), "Kết quả tìm kiếm", JOptionPane.INFORMATION_MESSAGE);
+    }
+});
 
     // 4. Ghép 2 bên vào JSplitPane
     JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
@@ -385,7 +425,7 @@ private void handleEditItem() {
             }
         }
     }
-
+    
     public void refreshTable() {
     if (repository != null && tableModel != null) {
         List<LibraryItem> latestData = repository.findAll();
@@ -393,11 +433,13 @@ private void handleEditItem() {
     }
     
 }
-/*@Override
+
+@Override
 protected void showAbout() {
     // Khởi tạo và hiển thị form About của nhóm
-    // (Nhớ import class AboutDialog do đồng đội viết)
     AboutDialog dialog = new AboutDialog(this);
     dialog.setVisible(true);
-}*/
+    
+
+}
 }

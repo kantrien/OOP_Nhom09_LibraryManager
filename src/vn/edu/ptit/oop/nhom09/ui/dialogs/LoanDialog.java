@@ -356,13 +356,20 @@ public class LoanDialog extends JDialog {
         lblStatus.setForeground(new Color(0, 150, 0));
 
         borrowed = false;
+        // Trong LoanDialog.java, nút btnReturn
+        btnReturn.addActionListener(e -> {
         try {
-            loanService.returnItem(CurrenItem.getId(), returnDate);
-            CurrenItem.setAvailable(true); 
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi hệ thống: " + ex.getMessage());
-            return;
+                loanService.returnItem(CurrenItem.getId());
+                CurrenItem.setAvailable(true); // Cập nhật trạng thái sách thành có sẵn
+                JOptionPane.showMessageDialog(this, "Trả tài liệu thành công!");
+                this.dispose();
+        } catch (vn.edu.ptit.oop.nhom09.exception.OverdueException ex) {
+                // Bắt lỗi trễ hạn và bắt đóng tiền phạt
+                CurrenItem.setAvailable(true); // Vẫn cho trả sách nhưng phải nộp phạt
+                JOptionPane.showMessageDialog(this, ex.getMessage(), "YÊU CẦU NỘP PHẠT", JOptionPane.ERROR_MESSAGE);
+                this.dispose();
         }
+        });
 
         btnReturn.setEnabled(false);
 
